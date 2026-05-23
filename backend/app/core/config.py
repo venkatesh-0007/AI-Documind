@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://documind-ai-generater.vercel.app",
     ]
 
     class Config:
