@@ -202,7 +202,8 @@ export default function Home() {
         headers['X-GitHub-Token'] = currentGithubToken;
       }
 
-      const response = await fetch('http://localhost:8000/api/v1/analyze', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v1/analyze`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ repository_url: url }),
