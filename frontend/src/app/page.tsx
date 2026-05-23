@@ -202,7 +202,9 @@ export default function Home() {
         headers['X-GitHub-Token'] = currentGithubToken;
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      // Use environment variable, falling back to the Render URL if not set
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ai-documind.onrender.com';
+      
       const response = await fetch(`${apiUrl}/api/v1/analyze`, {
         method: 'POST',
         headers,
@@ -210,7 +212,15 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        let errorDetail = `API error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.detail) errorDetail = errorData.detail;
+          else if (errorData.message) errorDetail = errorData.message;
+        } catch (e) {
+          // If response isn't JSON, we fall back to the default status text
+        }
+        throw new Error(errorDetail);
       }
 
       const data: AnalyzeResponse = await response.json();
