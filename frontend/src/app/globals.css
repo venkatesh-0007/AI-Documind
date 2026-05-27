@@ -29,6 +29,8 @@
   --card-hover: #21262d; 
   --border: #30363d;
   --header-bg: #010409;
+  --font-geist-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 :root.light {

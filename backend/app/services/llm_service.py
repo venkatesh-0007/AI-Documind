@@ -64,11 +64,12 @@ async def generate_documentation_and_health(
         {files_context}
 
         Your task:
-        1. Generate a comprehensive Markdown document (under 'generated_docs') containing:
-           - README (project overview)
-           - Setup Instructions (guessed from package managers)
-           - Architecture Explanation
-           - API Summaries (if applicable)
+        1. Generate a comprehensive Markdown documentation bundle (under 'generated_docs') containing clearly separated sections for:
+           - README.md
+           - CONTRIBUTING.md
+           - Installation Guide
+           - Project Overview
+           - API Documentation if the structure suggests APIs, routes, controllers, server handlers, or OpenAPI files
         2. Calculate an AI-based Documentation Health Score (0-100).
         3. Provide Categorized Metrics (0-100 for each):
            - readme_completeness

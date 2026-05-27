@@ -11,7 +11,8 @@ import WarningsPanel from '@/components/dashboard/WarningsPanel';
 import SuggestionsPanel from '@/components/dashboard/SuggestionsPanel';
 import DocPreview from '@/components/dashboard/DocPreview';
 import SettingsDrawer from '@/components/dashboard/SettingsDrawer';
-import { AnalyzeResponse } from '@/types/analyze';
+import RepositoryPicker from '@/components/dashboard/RepositoryPicker';
+import { AnalyzeResponse, AuthSession, GitHubRepository, GitHubUser } from '@/types/analyze';
 
 type AppState = 'initial' | 'scanning' | 'results' | 'error';
 
@@ -25,54 +26,115 @@ interface HistoryItem {
   userName?: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ai-documind.onrender.com';
+
+const getStoredTheme = (): 'light' | 'dark' | 'system' => {
+  if (typeof window === 'undefined') return 'dark';
+  const theme = localStorage.getItem('documind-theme');
+  return theme === 'light' || theme === 'system' ? theme : 'dark';
+};
+
+const getStoredProvider = (): 'openai' | 'gemini' => {
+  if (typeof window === 'undefined') return 'openai';
+  return localStorage.getItem('documind-api-provider') === 'gemini' ? 'gemini' : 'openai';
+};
+
+const getStoredValue = (key: string) => {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(key) || '';
+};
+
+const getStoredHistory = (): HistoryItem[] => {
+  if (typeof window === 'undefined') return [];
+  const storedHistory = localStorage.getItem('documind-history');
+  if (!storedHistory) return [];
+
+  try {
+    return JSON.parse(storedHistory) as HistoryItem[];
+  } catch {
+    return [];
+  }
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  return error instanceof Error ? error.message : fallback;
+};
+
+const createRequestTimeout = (timeoutMs = 8000) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  return { controller, timeoutId };
+};
+
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('initial');
   const [analysisData, setAnalysisData] = useState<AnalyzeResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [githubUser, setGithubUser] = useState<GitHubUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
+  const [isReposLoading, setIsReposLoading] = useState(false);
+  const [reposError, setReposError] = useState('');
   
   // Settings States
-  const [userName, setUserName] = useState('');
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
-  const [defaultRepo, setDefaultRepo] = useState('');
-  const [provider, setProvider] = useState<'openai' | 'gemini'>('openai');
-  const [openaiKey, setOpenaiKey] = useState('');
-  const [geminiKey, setGeminiKey] = useState('');
-  const [githubToken, setGithubToken] = useState('');
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [userName, setUserName] = useState(() => getStoredValue('documind-user-name'));
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => getStoredTheme());
+  const [defaultRepo, setDefaultRepo] = useState(() => getStoredValue('documind-default-repo'));
+  const [provider, setProvider] = useState<'openai' | 'gemini'>(() => getStoredProvider());
+  const [openaiKey, setOpenaiKey] = useState(() => getStoredValue('documind-openai-api-key'));
+  const [geminiKey, setGeminiKey] = useState(() => getStoredValue('documind-gemini-api-key'));
+  const [history, setHistory] = useState<HistoryItem[]>(() => getStoredHistory());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [searchUrl, setSearchUrl] = useState('');
+  const [searchUrl, setSearchUrl] = useState(() => getStoredValue('documind-default-repo'));
 
-  // Load settings on component mount
-  useEffect(() => {
-    const storedName = localStorage.getItem('documind-user-name') || '';
-    const storedTheme = (localStorage.getItem('documind-theme') as any) || 'dark';
-    const storedDefault = localStorage.getItem('documind-default-repo') || '';
-    const storedProvider = (localStorage.getItem('documind-api-provider') as any) || 'openai';
-    const storedOpenai = localStorage.getItem('documind-openai-api-key') || '';
-    const storedGemini = localStorage.getItem('documind-gemini-api-key') || '';
-    const storedGithub = localStorage.getItem('documind-github-token') || '';
-    const storedHistory = localStorage.getItem('documind-history');
-    
-    setUserName(storedName);
-    setTheme(storedTheme);
-    setDefaultRepo(storedDefault);
-    setProvider(storedProvider);
-    setOpenaiKey(storedOpenai);
-    setGeminiKey(storedGemini);
-    setGithubToken(storedGithub);
-    
-    if (storedDefault) {
-      setSearchUrl(storedDefault);
-    }
-    
-    if (storedHistory) {
-      try {
-        setHistory(JSON.parse(storedHistory));
-      } catch (e) {
-        console.error("Error parsing history", e);
+  const loadRepositories = React.useCallback(async () => {
+    setIsReposLoading(true);
+    setReposError('');
+    const { controller, timeoutId } = createRequestTimeout();
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/github/repos`, {
+        credentials: 'include',
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || 'Unable to load repositories from GitHub.');
       }
+      const data: GitHubRepository[] = await response.json();
+      setRepositories(data);
+    } catch (err: unknown) {
+      setReposError(getErrorMessage(err, 'Unable to load repositories from GitHub.'));
+    } finally {
+      window.clearTimeout(timeoutId);
+      setIsReposLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const loadSession = async () => {
+      setIsAuthLoading(true);
+      const { controller, timeoutId } = createRequestTimeout(5000);
+      try {
+        const response = await fetch(`${API_URL}/api/v1/auth/session`, {
+          credentials: 'include',
+          signal: controller.signal,
+        });
+        const data: AuthSession = await response.json();
+        const user = data.authenticated ? data.user || null : null;
+        setGithubUser(user);
+        if (user) {
+          await loadRepositories();
+        }
+      } catch {
+        setGithubUser(null);
+      } finally {
+        window.clearTimeout(timeoutId);
+        setIsAuthLoading(false);
+      }
+    };
+
+    loadSession();
+  }, [loadRepositories]);
 
   // Sync theme changes to Document root element
   useEffect(() => {
@@ -137,11 +199,6 @@ export default function Home() {
     localStorage.setItem('documind-gemini-api-key', val);
   };
 
-  const handleSetGithubToken = (val: string) => {
-    setGithubToken(val);
-    localStorage.setItem('documind-github-token', val);
-  };
-
   const handleClearHistory = () => {
     setHistory([]);
     localStorage.removeItem('documind-history');
@@ -167,12 +224,29 @@ export default function Home() {
     setProvider('openai');
     setOpenaiKey('');
     setGeminiKey('');
-    setGithubToken('');
     setHistory([]);
     setSearchUrl('');
     setIsSettingsOpen(false);
     setAppState('initial');
     setAnalysisData(null);
+  };
+
+  const handleLogin = () => {
+    window.location.href = `${API_URL}/api/v1/auth/github/login`;
+  };
+
+  const handleLogout = async () => {
+    setIsAuthLoading(true);
+    try {
+      await fetch(`${API_URL}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } finally {
+      setGithubUser(null);
+      setRepositories([]);
+      setIsAuthLoading(false);
+    }
   };
 
   const handleAnalyze = async (url: string) => {
@@ -188,7 +262,6 @@ export default function Home() {
       const currentProvider = localStorage.getItem('documind-api-provider') || 'openai';
       const currentOpenaiKey = localStorage.getItem('documind-openai-api-key') || '';
       const currentGeminiKey = localStorage.getItem('documind-gemini-api-key') || '';
-      const currentGithubToken = localStorage.getItem('documind-github-token') || '';
       
       headers['X-Provider'] = currentProvider;
       
@@ -198,16 +271,10 @@ export default function Home() {
       if (currentGeminiKey && currentProvider === 'gemini') {
         headers['X-Gemini-Key'] = currentGeminiKey;
       }
-      if (currentGithubToken) {
-        headers['X-GitHub-Token'] = currentGithubToken;
-      }
-
-      // Use environment variable, falling back to the Render URL if not set
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://ai-documind.onrender.com';
-      
-      const response = await fetch(`${apiUrl}/api/v1/analyze`, {
+      const response = await fetch(`${API_URL}/api/v1/analyze`, {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ repository_url: url }),
       });
 
@@ -217,7 +284,7 @@ export default function Home() {
           const errorData = await response.json();
           if (errorData.detail) errorDetail = errorData.detail;
           else if (errorData.message) errorDetail = errorData.message;
-        } catch (e) {
+        } catch {
           // If response isn't JSON, we fall back to the default status text
         }
         throw new Error(errorDetail);
@@ -238,16 +305,16 @@ export default function Home() {
         userName: localStorage.getItem('documind-user-name') || undefined
       };
       
-      const currentHistory = JSON.parse(localStorage.getItem('documind-history') || '[]');
-      const filteredHistory = currentHistory.filter((item: any) => item.url !== url);
+      const currentHistory = getStoredHistory();
+      const filteredHistory = currentHistory.filter((item) => item.url !== url);
       const updatedHistory = [newHistoryItem, ...filteredHistory].slice(0, 10);
       
       setHistory(updatedHistory);
       localStorage.setItem('documind-history', JSON.stringify(updatedHistory));
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setErrorMsg(err.message || 'An error occurred during analysis.');
+      setErrorMsg(getErrorMessage(err, 'An error occurred during analysis.'));
       setAppState('error');
     }
   };
@@ -258,7 +325,14 @@ export default function Home() {
       {/* Top Navigation / Header area */}
       <div className="w-full border-b border-border bg-header-bg">
         <div className="max-w-7xl mx-auto">
-          <Header onOpenSettings={() => setIsSettingsOpen(true)} userName={userName} />
+          <Header
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            userName={userName}
+            githubUser={githubUser}
+            isAuthLoading={isAuthLoading}
+            onLogin={handleLogin}
+            onLogout={handleLogout}
+          />
         </div>
       </div>
       
@@ -276,8 +350,18 @@ export default function Home() {
             </p>
           </div>
           
-          <UrlInput onAnalyze={handleAnalyze} isScanning={appState === 'scanning'} initialUrl={searchUrl} />
+          <UrlInput key={searchUrl} onAnalyze={handleAnalyze} isScanning={appState === 'scanning'} initialUrl={searchUrl} />
         </div>
+
+        {githubUser && (
+          <RepositoryPicker
+            repositories={repositories}
+            isLoading={isReposLoading}
+            error={reposError}
+            onRefresh={loadRepositories}
+            onSelect={handleAnalyze}
+          />
+        )}
 
         <AnimatePresence mode="wait">
           {appState === 'initial' && (
@@ -394,8 +478,6 @@ export default function Home() {
         setDefaultRepo={handleSetDefaultRepo}
         openaiKey={openaiKey}
         setOpenaiKey={handleSetOpenaiKey}
-        githubToken={githubToken}
-        setGithubToken={handleSetGithubToken}
         provider={provider}
         setProvider={handleSetProvider}
         geminiKey={geminiKey}
@@ -409,4 +491,3 @@ export default function Home() {
     </div>
   );
 }
-

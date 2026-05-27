@@ -36,3 +36,30 @@ export interface AnalyzeResponse {
   suggestions: Suggestion[];
   generated_docs?: string;
 }
+
+export interface GitHubUser {
+  id: number;
+  login: string;
+  name?: string | null;
+  avatar_url?: string | null;
+  html_url?: string | null;
+}
+
+export interface AuthSession {
+  authenticated: boolean;
+  user?: GitHubUser | null;
+}
+
+export interface GitHubRepository {
+  id: number;
+  name: string;
+  full_name: string;
+  private: boolean;
+  html_url: string;
+  description?: string | null;
+  default_branch: string;
+  language?: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  updated_at?: string | null;
+}

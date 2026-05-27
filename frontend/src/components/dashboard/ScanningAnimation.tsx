@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, Brain, GitBranch, Cpu, Activity, Check, Loader2, Play } from 'lucide-react';
+/* eslint-disable react-hooks/set-state-in-effect */
+import { Terminal, Brain, Activity, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ScanningAnimationProps {
@@ -40,7 +40,7 @@ export default function ScanningAnimation({ url = '' }: ScanningAnimationProps) 
         repoName = parts[parts.length - 1];
         repoOwner = parts[parts.length - 2];
       }
-    } catch (e) {}
+    } catch {}
   }
 
   // Stepper timer
@@ -183,8 +183,6 @@ export default function ScanningAnimation({ url = '' }: ScanningAnimationProps) 
             {workflows.map((flow, index) => {
               const isCompleted = index < activeStep;
               const isActive = index === activeStep;
-              const isFuture = index > activeStep;
-
               return (
                 <div key={flow.id} className="relative flex items-start gap-4">
                   {/* Circular Node */}

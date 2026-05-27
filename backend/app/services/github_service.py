@@ -1,3 +1,5 @@
+import re
+from urllib.parse import urlparse
 import httpx
 from typing import Tuple
 from fastapi import HTTPException
@@ -8,10 +10,15 @@ GITHUB_API_BASE_URL = "https://api.github.com"
 
 def parse_github_url(url: str) -> Tuple[str, str]:
     """Parse a GitHub URL and extract owner and repo name."""
-    url = url.rstrip("/")
-    parts = url.split("/")
-    if len(parts) >= 2 and "github.com" in parts[-3:-2] or "github.com" in url:
-        return parts[-2], parts[-1]
+    parsed = urlparse(url.rstrip("/"))
+    if parsed.netloc.lower() not in {"github.com", "www.github.com"}:
+        raise ValueError("Invalid GitHub URL")
+
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) >= 2:
+        owner = parts[0]
+        repo = re.sub(r"\.git$", "", parts[1])
+        return owner, repo
     raise ValueError("Invalid GitHub URL")
 
 async def fetch_github_data(

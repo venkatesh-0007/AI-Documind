@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Search, ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -14,12 +14,6 @@ interface UrlInputProps {
 export default function UrlInput({ onAnalyze, isScanning, initialUrl = '' }: UrlInputProps) {
   const [url, setUrl] = React.useState(initialUrl);
   const [error, setError] = React.useState('');
-
-  React.useEffect(() => {
-    if (initialUrl) {
-      setUrl(initialUrl);
-    }
-  }, [initialUrl]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
