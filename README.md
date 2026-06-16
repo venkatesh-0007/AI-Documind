@@ -55,81 +55,48 @@ Base path: `/api/v1`
 - `POST /auth/logout` clears the current session.
 - `GET /auth/github/repos` returns repositories for the authenticated user.
 - `POST /analyze` analyzes a GitHub repository.
-
 Example analyze request:
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/analyze \
+curl -X POST https://ai-documind.onrender.com/api/v1/analyze \
   -H "Content-Type: application/json" \
   -d '{"repository_url":"https://github.com/openai/openai-python"}'
 ```
 
-## Environment Variables
+## Production Deployment & Environment Variables
 
-Backend:
+The project is deployed in production with the frontend hosted on Vercel and the backend hosted on Render:
+
+*   **Frontend (Vercel)**: [https://documind-ai-generater.vercel.app](https://documind-ai-generater.vercel.app)
+*   **Backend (Render)**: [https://ai-documind.onrender.com](https://ai-documind.onrender.com)
+
+### Environment Variables
+
+#### Backend (Render Web Service)
+
+These must be configured under the **Environment** tab of your Render Web Service:
 
 ```bash
-GITHUB_CLIENT_ID=your_github_oauth_app_client_id
+GITHUB_CLIENT_ID=0v23lixwx13mslyLer5T
 GITHUB_CLIENT_SECRET=your_github_oauth_app_client_secret
-GITHUB_OAUTH_REDIRECT_URI=http://localhost:8000/api/v1/auth/github/callback
-BACKEND_PUBLIC_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:3000
-SESSION_SECRET=replace-with-a-long-random-secret
-COOKIE_SECURE=false
-COOKIE_SAMESITE=lax
+GITHUB_OAUTH_REDIRECT_URI=https://ai-documind.onrender.com/api/v1/auth/github/callback
+BACKEND_PUBLIC_URL=https://ai-documind.onrender.com
+FRONTEND_URL=https://documind-ai-generater.vercel.app
+COOKIE_SECURE=true
+COOKIE_SAMESITE=none
+SESSION_SECRET=your_long_random_session_secret
 OPENAI_API_KEY=optional_server_openai_key
 GEMINI_API_KEY=optional_server_gemini_key
 GITHUB_TOKEN=optional_server_fallback_token_for_public_repo_rate_limits
 ```
 
-Frontend:
+#### Frontend (Vercel Project)
+
+These must be configured in your Vercel Project Environment Variables:
 
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://ai-documind.onrender.com
 ```
-
-For production cross-site frontend/backend deployments, set:
-
-```bash
-COOKIE_SECURE=true
-COOKIE_SAMESITE=none
-FRONTEND_URL=https://your-frontend-domain.example
-BACKEND_PUBLIC_URL=https://your-backend-domain.example
-GITHUB_OAUTH_REDIRECT_URI=https://your-backend-domain.example/api/v1/auth/github/callback
-```
-
-## Local Setup
-
-1. Create a GitHub OAuth App at GitHub Developer Settings.
-2. Set the callback URL to `http://localhost:8000/api/v1/auth/github/callback`.
-3. Start the backend:
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-4. Start the frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-5. Open [http://localhost:3000](http://localhost:3000).
-
-## Deployment
-
-- Deploy the FastAPI backend to a service such as Render, Railway, Fly.io, or a container platform.
-- Deploy the Next.js frontend to Vercel or another Node-capable host.
-- Configure the GitHub OAuth App callback URL to the deployed backend callback.
-- Set the production environment variables listed above.
-- Ensure backend CORS includes the frontend origin.
-- Use a persistent/shared session store before running multiple backend replicas.
 
 ## Security Notes
 
