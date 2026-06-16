@@ -11,6 +11,40 @@ gemini_client = AsyncOpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
 ) if settings.GEMINI_API_KEY else None
 
+def clean_json_response(content: str) -> str:
+    content = content.strip()
+    # Remove markdown code block wrappers if present
+    if content.startswith("```json"):
+        content = content[7:]
+    elif content.startswith("```"):
+        content = content[3:]
+    if content.endswith("```"):
+        content = content[:-3]
+    content = content.strip()
+    
+    # Escape raw control characters (newlines, carriage returns, tabs) inside JSON string values
+    in_string = False
+    escaped = False
+    result = []
+    for char in content:
+        if char == '"' and not escaped:
+            in_string = not in_string
+            result.append(char)
+        elif char == '\\' and in_string:
+            escaped = not escaped
+            result.append(char)
+        else:
+            if char == '\n' and in_string:
+                result.append('\\n')
+            elif char == '\r' and in_string:
+                result.append('\\r')
+            elif char == '\t' and in_string:
+                result.append('\\t')
+            else:
+                result.append(char)
+            escaped = False
+    return "".join(result)
+
 async def generate_documentation_and_health(
     owner: str, 
     repo: str, 
@@ -113,12 +147,13 @@ async def generate_documentation_and_health(
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=2500
+            max_tokens=4000
         )
         
         content = response.choices[0].message.content
         if content:
-            return json.loads(content)
+            cleaned_content = clean_json_response(content)
+            return json.loads(cleaned_content)
         raise ValueError("Empty response from LLM")
     except Exception as e:
         return {
