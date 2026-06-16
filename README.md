@@ -1,31 +1,50 @@
-# DocuMind AI
+<div align="center">
 
-DocuMind AI is an AI documentation workflow for GitHub repositories. Users can sign in with GitHub, select a repository, analyze its structure, and generate a documentation bundle that includes README content, contribution guidance, installation notes, project overview, and API documentation when routes are detected.
+# 🧠 DocuMind AI
 
-## Features
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Outfit&size=22&duration=3000&pause=1000&color=238636&center=true&vCenter=true&width=450&lines=Scan+codebases+instantly;Generate+perfect+Markdown;Assess+documentation+health" alt="Typing SVG" />
+</p>
 
-- GitHub OAuth login with HttpOnly session cookies
-- Connected repository browser for public and private repositories authorized by the user
-- Repository metadata and recursive tree analysis through the GitHub API
-- AI-generated documentation bundle:
-  - `README.md`
-  - `CONTRIBUTING.md`
-  - installation guide
-  - project overview
-  - API documentation when applicable
-- Documentation health score, warnings, and recommendations
-- Loading, error, empty, and mobile-responsive dashboard states
-- OpenAI and Gemini provider support for documentation generation
+**Autonomously scan, analyze, and document any codebase with AI.**
 
-## Screenshots
+[![Vercel Deployment](https://img.shields.io/badge/Demo-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://documind-ai-generater.vercel.app)
+[![Render Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-documind.onrender.com)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
-Add production screenshots after deployment:
+</div>
 
-- Dashboard empty state
-- GitHub repository picker
-- Analysis results and Markdown preview
+---
 
-## Architecture
+## 🌟 Key Features
+
+<table width="100%">
+  <tr>
+    <td width="50%">
+      <h3>🔑 Secure OAuth Sessions</h3>
+      <p>Seamless GitHub integration using server-side secure cookies. Raw GitHub access tokens are <b>never</b> exposed to the frontend client.</p>
+    </td>
+    <td width="50%">
+      <h3>🚀 Agentic Analysis</h3>
+      <p>Recursively traverses repository folders via the GitHub API and extracts metadata for intelligent layout parsing.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>📄 Instant Document Generation</h3>
+      <p>Generates a complete documentation bundle including <code>README.md</code>, <code>CONTRIBUTING.md</code>, installation guides, and API documentation.</p>
+    </td>
+    <td width="50%">
+      <h3>📊 Health Assessment</h3>
+      <p>Provides an AI-derived Documentation Health Score (0-100), warnings for undocumented files, and actionable improvements.</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ Architecture
 
 ```text
 frontend/                 Next.js 16 + React 19 dashboard
@@ -41,21 +60,20 @@ backend/                  FastAPI service
   app/schemas/            Pydantic request/response models
 ```
 
-The frontend calls the backend using `NEXT_PUBLIC_API_URL`. GitHub OAuth is completed by the backend, which exchanges the OAuth code for an access token, stores the token server-side, and sends only a signed HttpOnly session cookie to the browser. The browser never receives the GitHub token.
+---
 
-No database is currently required. Sessions are stored in backend memory, which is simple for local development but should be replaced with Redis, Postgres, or another shared session store before scaling to multiple backend instances.
+## 💻 API Usage
 
-## API Usage
+Base API Route: `https://ai-documind.onrender.com/api/v1`
 
-Base path: `/api/v1`
+*   `GET /auth/github/login` - Initiates the GitHub OAuth sequence.
+*   `GET /auth/github/callback` - Callback handler exchanging tokens and setting httpOnly session cookie.
+*   `GET /auth/session` - Retrieves session info for current logged-in user.
+*   `POST /auth/logout` - Destroys current session and deletes cookie.
+*   `GET /auth/github/repos` - Lists repositories for the authenticated user.
+*   `POST /analyze` - Starts repository analysis and document generation.
 
-- `GET /auth/github/login` starts GitHub OAuth.
-- `GET /auth/github/callback` handles the GitHub OAuth callback.
-- `GET /auth/session` returns the current authenticated GitHub user.
-- `POST /auth/logout` clears the current session.
-- `GET /auth/github/repos` returns repositories for the authenticated user.
-- `POST /analyze` analyzes a GitHub repository.
-Example analyze request:
+#### Example Analyze Request
 
 ```bash
 curl -X POST https://ai-documind.onrender.com/api/v1/analyze \
@@ -63,45 +81,39 @@ curl -X POST https://ai-documind.onrender.com/api/v1/analyze \
   -d '{"repository_url":"https://github.com/openai/openai-python"}'
 ```
 
-## Production Deployment & Environment Variables
+---
 
-The project is deployed in production with the frontend hosted on Vercel and the backend hosted on Render:
+## ⚙️ Environment Configurations
 
-*   **Frontend (Vercel)**: [https://documind-ai-generater.vercel.app](https://documind-ai-generater.vercel.app)
-*   **Backend (Render)**: [https://ai-documind.onrender.com](https://ai-documind.onrender.com)
+### 1. Backend (Render Settings)
 
-### Environment Variables
+Configure the following variables in the **Environment** tab of your Render Web Service:
 
-#### Backend (Render Web Service)
+| Variable | Value / Description |
+| :--- | :--- |
+| `GITHUB_CLIENT_ID` | `0v23lixwx13mslyLer5T` |
+| `GITHUB_CLIENT_SECRET` | *Your GitHub OAuth App Client Secret* |
+| `GITHUB_OAUTH_REDIRECT_URI` | `https://ai-documind.onrender.com/api/v1/auth/github/callback` |
+| `BACKEND_PUBLIC_URL` | `https://ai-documind.onrender.com` |
+| `FRONTEND_URL` | `https://documind-ai-generater.vercel.app` |
+| `COOKIE_SECURE` | `true` |
+| `COOKIE_SAMESITE` | `none` |
+| `SESSION_SECRET` | *A long, randomly generated secure key string* |
+| `OPENAI_API_KEY` | *Optional OpenAI api key override* |
+| `GEMINI_API_KEY` | *Optional Gemini api key override* |
 
-These must be configured under the **Environment** tab of your Render Web Service:
+### 2. Frontend (Vercel Settings)
 
-```bash
-GITHUB_CLIENT_ID=0v23lixwx13mslyLer5T
-GITHUB_CLIENT_SECRET=your_github_oauth_app_client_secret
-GITHUB_OAUTH_REDIRECT_URI=https://ai-documind.onrender.com/api/v1/auth/github/callback
-BACKEND_PUBLIC_URL=https://ai-documind.onrender.com
-FRONTEND_URL=https://documind-ai-generater.vercel.app
-COOKIE_SECURE=true
-COOKIE_SAMESITE=none
-SESSION_SECRET=your_long_random_session_secret
-OPENAI_API_KEY=optional_server_openai_key
-GEMINI_API_KEY=optional_server_gemini_key
-GITHUB_TOKEN=optional_server_fallback_token_for_public_repo_rate_limits
-```
+Configure the following environment variable in your Vercel Project dashboard:
 
-#### Frontend (Vercel Project)
+| Variable | Value |
+| :--- | :--- |
+| `NEXT_PUBLIC_API_URL` | `https://ai-documind.onrender.com` |
 
-These must be configured in your Vercel Project Environment Variables:
+---
 
-```bash
-NEXT_PUBLIC_API_URL=https://ai-documind.onrender.com
-```
+## 🔒 Security Summary
 
-## Security Notes
-
-- GitHub access tokens are never exposed to the frontend.
-- The session id is signed and stored in an HttpOnly cookie.
-- OAuth state is signed and validated to reduce CSRF risk.
-- Use a strong `SESSION_SECRET` in every deployed environment.
-- Do not commit `.env` files or provider API keys.
+*   **Token Isolation**: GitHub API Access tokens stay on the backend memory session store and are never transmitted to the browser.
+*   **HttpOnly Cookies**: Sessions are maintained via signed, httpOnly, secure cookies to prevent XSS-based session hijacking.
+*   **CSRF Mitigation**: OAuth state tokens are signed and verified on every authorization callback.
