@@ -77,15 +77,30 @@ export default function Home() {
   const [reposError, setReposError] = useState('');
   
   // Settings States
-  const [userName, setUserName] = useState(() => getStoredValue('documind-user-name'));
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => getStoredTheme());
-  const [defaultRepo, setDefaultRepo] = useState(() => getStoredValue('documind-default-repo'));
-  const [provider, setProvider] = useState<'openai' | 'gemini'>(() => getStoredProvider());
-  const [openaiKey, setOpenaiKey] = useState(() => getStoredValue('documind-openai-api-key'));
-  const [geminiKey, setGeminiKey] = useState(() => getStoredValue('documind-gemini-api-key'));
-  const [history, setHistory] = useState<HistoryItem[]>(() => getStoredHistory());
+  const [userName, setUserName] = useState('');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [defaultRepo, setDefaultRepo] = useState('');
+  const [provider, setProvider] = useState<'openai' | 'gemini'>('openai');
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [searchUrl, setSearchUrl] = useState(() => getStoredValue('documind-default-repo'));
+  const [searchUrl, setSearchUrl] = useState('');
+
+  // Load settings from localStorage on client-side mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setUserName(getStoredValue('documind-user-name'));
+      setTheme(getStoredTheme());
+      setDefaultRepo(getStoredValue('documind-default-repo'));
+      setProvider(getStoredProvider());
+      setOpenaiKey(getStoredValue('documind-openai-api-key'));
+      setGeminiKey(getStoredValue('documind-gemini-api-key'));
+      setHistory(getStoredHistory());
+      setSearchUrl(getStoredValue('documind-default-repo'));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const loadRepositories = React.useCallback(async () => {
     setIsReposLoading(true);
