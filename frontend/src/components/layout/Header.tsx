@@ -1,5 +1,4 @@
-import React from 'react';
-import { BookOpen, GitBranch, LogOut, Settings } from 'lucide-react';
+import { GitBranch, LogOut, Settings } from 'lucide-react';
 import { GitHubUser } from '@/types/analyze';
 
 interface HeaderProps {
@@ -23,9 +22,12 @@ export default function Header({
     <header className="sticky top-0 z-50 w-full bg-header-bg transition-colors duration-300">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.location.reload()}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
-            <BookOpen className="h-5 w-5" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="DocuMind AI Logo"
+            className="h-8 w-8 object-contain rounded-full"
+          />
           <span className="text-lg font-semibold tracking-tight text-foreground">
             DocuMind AI
           </span>

@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "AI documentation workflow for GitHub repositories.",
   icons: {
     icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 
