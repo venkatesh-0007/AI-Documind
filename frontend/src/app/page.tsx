@@ -13,6 +13,7 @@ import DocPreview from '@/components/dashboard/DocPreview';
 import SettingsDrawer from '@/components/dashboard/SettingsDrawer';
 import RepositoryPicker from '@/components/dashboard/RepositoryPicker';
 import { AnalyzeResponse, AuthSession, GitHubRepository, GitHubUser } from '@/types/analyze';
+import { Terminal, RefreshCcw, Sparkles, CheckCircle2 } from 'lucide-react';
 
 type AppState = 'initial' | 'scanning' | 'results' | 'error';
 
@@ -335,38 +336,45 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col relative bg-background text-foreground transition-colors duration-300 overflow-x-hidden select-none">
       
-      {/* Top Navigation / Header area */}
-      <div className="w-full border-b border-border bg-header-bg">
-        <div className="max-w-7xl mx-auto">
-          <Header
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            userName={userName}
-            githubUser={githubUser}
-            isAuthLoading={isAuthLoading}
-            onLogin={handleLogin}
-            onLogout={handleLogout}
-          />
-        </div>
-      </div>
+      {/* Decorative Premium Mesh Glowing Background elements */}
+      <div className="absolute top-0 right-1/4 w-[450px] h-[450px] bg-primary/5 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="absolute top-[20%] left-[10%] w-[350px] h-[350px] bg-violet-600/5 rounded-full blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] bg-success/5 rounded-full blur-[130px] pointer-events-none z-0" />
+
+      {/* Top Navbar Header */}
+      <Header
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        userName={userName}
+        githubUser={githubUser}
+        isAuthLoading={isAuthLoading}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+      />
       
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col gap-6">
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col gap-6 z-10 relative">
         
-        {/* Hero / Input Section */}
-        <div className="mb-4">
+        {/* Hero Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-3"
+        >
           <div className="mb-6">
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-2 text-foreground">
-              Agentic Analysis
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2.5 font-sans flex items-center gap-2">
+              <Sparkles className="w-8 h-8 text-primary" />
+              Agentic Analysis Engine
             </h1>
-            <p className="text-base text-foreground/70">
-              Autonomously scan, analyze, and document any codebase with AI.
+            <p className="text-sm md:text-base text-foreground/50 leading-relaxed font-sans max-w-xl">
+              Autonomously scan, map structure, and generate high-fidelity technical documentation from any GitHub codebase.
             </p>
           </div>
           
           <UrlInput key={searchUrl} onAnalyze={handleAnalyze} isScanning={appState === 'scanning'} initialUrl={searchUrl} />
-        </div>
+        </motion.div>
 
         {githubUser && (
           <RepositoryPicker
@@ -382,17 +390,18 @@ export default function Home() {
           {appState === 'initial' && (
              <motion.div 
                key="empty"
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               className="flex-1 flex flex-col items-center justify-center min-h-[40vh] py-12"
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, y: -10 }}
+               transition={{ duration: 0.3 }}
+               className="flex-1 flex flex-col items-center justify-center min-h-[35vh] py-12"
              >
-               <div className="text-center opacity-60 max-w-md border border-border bg-card rounded-lg p-8 shadow-sm">
-                 <svg className="w-12 h-12 text-foreground/50 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                 </svg>
-                 <h2 className="text-xl font-semibold mb-2">Awaiting Target</h2>
-                 <p className="text-sm text-foreground/80">Enter a valid GitHub URL above to initiate the agentic analysis sequence.</p>
+               <div className="text-center opacity-70 max-w-sm border border-border bg-card/45 backdrop-blur-md rounded-2xl p-8 shadow-sm flex flex-col items-center">
+                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 mb-4 text-primary">
+                   <Terminal className="w-6 h-6" />
+                 </div>
+                 <h2 className="text-sm font-bold uppercase tracking-wider mb-2 text-foreground/80">Awaiting Target</h2>
+                 <p className="text-xs text-foreground/45 leading-relaxed">Enter a public or authenticated GitHub URL above to trigger the autonomous workspace scanning sequence.</p>
                </div>
              </motion.div>
           )}
@@ -400,9 +409,10 @@ export default function Home() {
           {appState === 'scanning' && (
              <motion.div 
                key="scanning"
-               initial={{ opacity: 0, height: 0 }}
-               animate={{ opacity: 1, height: 'auto' }}
-               exit={{ opacity: 0, height: 0 }}
+               initial={{ opacity: 0, scale: 0.98 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.98 }}
+               transition={{ duration: 0.3 }}
                className="w-full flex-1 min-h-[300px]"
              >
                <ScanningAnimation url={searchUrl} />
@@ -412,15 +422,18 @@ export default function Home() {
           {appState === 'results' && analysisData && (
              <motion.div
                key="results-feed"
-               initial={{ opacity: 0, y: 10 }}
+               initial={{ opacity: 0, y: 15 }}
                animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0, y: -15 }}
+               transition={{ duration: 0.4 }}
                className="space-y-6 pb-20"
              >
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-card border border-border p-4 rounded-lg shadow-sm">
+               {/* Analysis complete card banner */}
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-card/50 border border-border p-5 rounded-2xl shadow-sm backdrop-blur-md gap-4">
                  <div>
-                   <div className="flex items-center gap-2 mb-1">
-                     <div className="w-2.5 h-2.5 rounded-full bg-success" />
-                     <span className="font-semibold text-success text-sm">Analysis Complete</span>
+                   <div className="flex items-center gap-2 mb-1.5">
+                     <CheckCircle2 className="w-4 h-4 text-success" />
+                     <span className="font-extrabold text-success text-xs uppercase tracking-wider">Analysis Complete</span>
                    </div>
                    <p className="text-foreground/80 font-mono text-sm">
                      {analysisData.owner}/{analysisData.repo}
@@ -431,12 +444,10 @@ export default function Home() {
                      setSearchUrl(defaultRepo || searchUrl);
                      setAppState('initial');
                    }}
-                   className="mt-4 md:mt-0 px-4 py-2 bg-background border border-border hover:bg-card-hover rounded-md text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
+                   className="w-full md:w-auto px-4 py-2.5 bg-background border border-border hover:bg-card-hover rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.97]"
                  >
-                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                   </svg>
-                   Analyze Another
+                   <RefreshCcw className="w-3.5 h-3.5 text-foreground/60" />
+                   Scan Another Target
                  </button>
                </div>
 
@@ -456,29 +467,30 @@ export default function Home() {
 
                <DocPreview content={analysisData.generated_docs} />
              </motion.div>
-           )}
+            )}
 
-          {appState === 'error' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 bg-danger/10 border border-danger/30 rounded-lg p-6 shadow-sm"
-            >
-              <h3 className="text-lg font-bold text-danger mb-2 flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                Analysis Failed
-              </h3>
-              <p className="text-foreground/80 text-sm mb-5 leading-relaxed">{errorMsg}</p>
-              <button
-                onClick={() => setAppState('initial')}
-                className="px-4 py-2 bg-background border border-danger/30 hover:bg-danger/10 rounded-md text-sm font-medium transition-colors"
-              >
-                Try Again
-              </button>
-            </motion.div>
-          )}
+           {appState === 'error' && (
+             <motion.div
+               initial={{ opacity: 0, y: 15 }}
+               animate={{ opacity: 1, y: 0 }}
+               exit={{ opacity: 0 }}
+               className="mt-4 bg-danger/5 border border-danger/15 rounded-2xl p-6 shadow-sm backdrop-blur-sm max-w-xl mx-auto"
+             >
+               <h3 className="text-base font-bold text-danger mb-2.5 flex items-center gap-2">
+                 <span className="w-2.5 h-2.5 rounded-full bg-danger animate-pulse" />
+                 Telemetry Scan Interrupted
+               </h3>
+               <p className="text-foreground/70 text-xs md:text-sm leading-relaxed mb-5 font-mono bg-black/25 p-3 rounded-lg border border-border">
+                 {errorMsg}
+               </p>
+               <button
+                 onClick={() => setAppState('initial')}
+                 className="w-full sm:w-auto px-4 py-2.5 bg-danger/10 hover:bg-danger/15 border border-danger/20 text-danger rounded-xl text-xs font-bold transition-all active:scale-[0.97]"
+               >
+                 Acknowledge & Try Again
+               </button>
+             </motion.div>
+           )}
         </AnimatePresence>
       </main>
 
